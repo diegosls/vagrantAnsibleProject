@@ -1,0 +1,93 @@
+---
+- name: Configuração comum para todas as VMs
+  hosts: all
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Atualiza o sistema
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Instala o chrony
+      apt:
+        name: chrony
+        state: present
+
+    - name: Configura o NTP
+      lineinfile:
+        path: /etc/chrony/chrony.conf
+        regexp: '^pool'
+        line: 'pool pool.ntp.br iburst'
+        state: present
+      notify: restart chrony
+
+    - name: Define timezone
+      timezone:
+        name: America/Recife
+
+    - name: Cria grupo ifpb
+      group:
+        name: ifpb
+        state: present
+
+    - name: Cria usuários
+      user:
+        name: "{{ item }}"
+        groups: ifpb
+        shell: /bin/bash
+        create_home: yes
+      loop:
+        - diego
+        - igor
+
+    - name: Copia chaves públicas
+      authorized_key:
+        user: "{{ item }}"
+        state: present
+        key: "{{ lookup('file', 'files/id_rsa.pub.' + item) }}"
+      loop:
+        - diego
+        - igor
+
+    - name: Configura mensagem de aviso SSH
+      copy:
+        src: templates/motd.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Configura SSH (PermitOnlyKey, Disable root, Group access)
+      blockinfile:
+        path: /etc/ssh/sshd_config
+        block: |
+          PermitRootLogin no
+          PasswordAuthentication no
+          AllowGroups vagrant ifpb
+      notify: restart ssh
+
+    - name: Instala cliente NFS
+      apt:
+        name: nfs-common
+        state: present
+
+    - name: Permite sudo para grupo ifpb
+      copy:
+        content: "%ifpb ALL=(ALL) NOPASSWD:ALL"
+        dest: /etc/sudoers.d/ifpb
+        mode: '0440'
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
+
+    - name: restart chrony
+      service:
+        name: chrony
+        state: restarted
+

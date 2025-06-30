@@ -1,0 +1,13 @@
+---
+usuarios:
+  - diego
+  - igor
+
+nome1: "diego"
+nome2: "igor"
+matricula1: "34"
+matricula2: "25" 
+combinada: "45"
+
+dhcp_db_ip: "192.168.56.1{{ matricula2 }}" 
+dhcp_app_ip: "192.168.56.1{{ combinada }}" 

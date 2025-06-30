@@ -1,0 +1,69 @@
+---
+- name: Configurações do Host Cliente (cli)
+  hosts: cli
+  become: yes
+  vars_files:
+    - vars.yml # Garante que as variáveis de nome/matrícula estejam disponíveis
+
+  tasks:
+    - name: Instalar os pacotes firefox-esr e xauth
+      ansible.builtin.apt:
+        name:
+          - firefox-esr
+          - xauth
+        state: present
+      tags:
+        - cli
+        - x11
+
+    - name: Ajustar o servidor SSH a permitir a exportação da interface dos aplicativos X11
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^X11Forwarding'
+        line: 'X11Forwarding yes'
+        state: present
+      notify: Restart sshd
+      tags:
+        - cli
+        - ssh
+
+    - name: Instalar o serviço autofs
+      ansible.builtin.apt:
+        name: autofs
+        state: present
+      tags:
+        - cli
+        - autofs
+
+    - name: Configurar auto.master para autofs
+      ansible.builtin.lineinfile:
+        path: /etc/auto.master
+        line: '/var/nfs /etc/auto.nfs --timeout=60'
+        state: present
+      notify: Restart autofs
+      tags:
+        - cli
+        - autofs
+
+    - name: Criar arquivo auto.nfs para montagem automática do compartilhamento NFS
+      ansible.builtin.copy:
+        content: 'nfs -fstype=nfs,rw arq:/dados/nfs'
+        dest: /etc/auto.nfs
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart autofs
+      tags:
+        - cli
+        - autofs
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: Restart autofs
+      ansible.builtin.service:
+        name: autofs
+        state: restarted

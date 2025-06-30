@@ -1,0 +1,51 @@
+---
+- name: Configurações do Servidor de Banco de Dados (db)
+  hosts: db
+  become: yes
+  vars_files:
+    - vars.yml # Garante que as variáveis de nome/matrícula estejam disponíveis
+
+  tasks:
+    - name: Instalar o servidor de banco de dados mariadb-server
+      ansible.builtin.apt:
+        name: mariadb-server
+        state: present
+      tags:
+        - db
+        - mariadb
+
+    - name: Instalar o serviço autofs
+      ansible.builtin.apt:
+        name: autofs
+        state: present
+      tags:
+        - db
+        - autofs
+
+    - name: Configurar auto.master para autofs
+      ansible.builtin.lineinfile:
+        path: /etc/auto.master
+        line: '/var/nfs /etc/auto.nfs --timeout=60'
+        state: present
+      notify: Restart autofs
+      tags:
+        - db
+        - autofs
+
+    - name: Criar arquivo auto.nfs para montagem automática do compartilhamento NFS
+      ansible.builtin.copy:
+        content: 'nfs -fstype=nfs,rw arq:/dados/nfs'
+        dest: /etc/auto.nfs
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart autofs
+      tags:
+        - db
+        - autofs
+
+  handlers:
+    - name: Restart autofs
+      ansible.builtin.service:
+        name: autofs
+        state: restarted

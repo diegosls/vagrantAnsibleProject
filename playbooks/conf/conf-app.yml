@@ -1,0 +1,68 @@
+---
+- name: Configurações do Servidor de Aplicação (app)
+  hosts: app
+  become: yes
+  vars_files:
+    - vars.yml # Garante que as variáveis de nome/matrícula estejam disponíveis
+
+  tasks:
+    - name: Instalar e configurar o servidor web apache2
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+      tags:
+        - app
+        - apache
+
+    - name: Criar e transferir arquivo index.html para substituir a página default do Apache
+      ansible.builtin.template:
+        src: ../templates/index.html.j2
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: '0644'
+      tags:
+        - app
+        - apache
+      notify: Restart apache2
+
+    - name: Instalar o serviço autofs
+      ansible.builtin.apt:
+        name: autofs
+        state: present
+      tags:
+        - app
+        - autofs
+
+    - name: Configurar auto.master para autofs
+      ansible.builtin.lineinfile:
+        path: /etc/auto.master
+        line: '/var/nfs /etc/auto.nfs --timeout=60'
+        state: present
+      notify: Restart autofs
+      tags:
+        - app
+        - autofs
+
+    - name: Criar arquivo auto.nfs para montagem automática do compartilhamento NFS
+      ansible.builtin.copy:
+        content: 'nfs -fstype=nfs,rw arq:/dados/nfs'
+        dest: /etc/auto.nfs
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart autofs
+      tags:
+        - app
+        - autofs
+
+  handlers:
+    - name: Restart apache2
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
+
+    - name: Restart autofs
+      ansible.builtin.service:
+        name: autofs
+        state: restarted

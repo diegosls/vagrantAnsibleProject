@@ -1,0 +1,31 @@
+---
+- name: Configura o servidor DHCP autoritativo
+  hosts: arq
+  become: true
+
+  tasks:
+    - name: Instala o servidor DHCP
+      apt:
+        name: isc-dhcp-server
+        state: present
+
+    - name: Copia o arquivo dhcpd.conf
+      ansible.builtin.template:
+        src: templates/dhcpd.conf.j2
+        dest: /etc/dhcp/dhcpd.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Define a interface de escuta do DHCP
+      lineinfile:
+        path: /etc/default/isc-dhcp-server
+        regexp: '^INTERFACESv4='
+        line: 'INTERFACESv4="eth1"'
+
+    - name: Reinicia o serviço DHCP
+      service:
+        name: isc-dhcp-server
+        state: restarted
+        enabled: yes
+

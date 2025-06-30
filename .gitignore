@@ -1,0 +1,7 @@
+# Chaves SSH privadas dos usuários
+playbooks/files/id_rsa.diego
+playbooks/files/id_rsa.igor
+
+# Chave SSH privada padrão do Vagrant e diretório .vagrant
+.vagrant/
+
