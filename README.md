@@ -7,7 +7,8 @@ Este projeto tem como objetivo provisionar e configurar uma infraestrutura virtu
 - **Diego Costa Sales** — Matrícula: 20221380034
 - **Igor de Oliveira Teixeira** — Matrícula: 20221380025
 
-- Disciplina: Admnistração de Sistemas Abertos
+## Disciplina: 
+- Admnistração de Sistemas Abertos
 - Professor: Leonidas Lima
 
 ## Estrutura do Projeto
