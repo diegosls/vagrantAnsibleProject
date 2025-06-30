@@ -1,67 +1,95 @@
-Projeto 01 - DevOps com Vagrant e Ansible
+# Projeto DevOps IFPB - Infraestrutura com Vagrant e Ansible
 
-Este projeto visa desenvolver competências em DevOps e Infraestrutura como Código (IaC) utilizando 
+Este projeto tem como objetivo provisionar e configurar uma infraestrutura virtual utilizando **Vagrant** e **Ansible**, promovendo práticas de DevOps e Infraestrutura como Código (IaC).
 
-Vagrant para provisionar infraestrutura virtual e Ansible para automatizar suas configurações. 
+## Integrantes
 
-Informações Essenciais:
+- **Diego Costa Sales** — Matrícula: 20221380034
+- **Igor de Oliveira Teixeira** — Matrícula: 20221380025
 
-    Disciplina: Administração de Sistemas Abertos 
+Disciplina: Admnistração de Sistemas Abertos
+Professor: Leonidas Lima
 
-Professor: Leonidas Lima 
+## Estrutura do Projeto
 
-Período: 2025.1 
+```
+.
+├── Vagrantfile
+├── hosts.ini
+├── ssh_config
+├── playbooks/
+│   ├── all.yml
+│   ├── vars.yml
+│   ├── conf-dhcp.yml
+│   ├── conf/
+│   │   ├── conf-app.yml
+│   │   ├── conf-arq-storage.yml
+│   │   ├── conf-cli.yml
+│   │   └── conf-db.yml
+│   ├── files/
+│   │   ├── id_rsa.diego
+│   │   ├── id_rsa.igor
+│   │   ├── id_rsa.pub.diego
+│   │   └── id_rsa.pub.igor
+│   └── templates/
+│       ├── dhcpd.conf.j2
+│       ├── index.html.j2
+│       └── motd.j2
+└── .gitignore
+```
 
-    Equipe: Diego Costa Sales - 20221380034 e Igor de Oliveira Teixeira 20221380034
+## Componentes
 
-Infraestrutura Provisionada (Vagrant): 
+- **Vagrantfile**: Define 4 VMs (arq, db, app, cli) com configurações de rede e armazenamento.
+- **Ansible Playbooks**:
+  - `all.yml`: Configuração comum a todas as VMs (usuários, SSH, NTP, sudo, etc).
+  - `conf-dhcp.yml`: Configuração do servidor DHCP na VM `arq`.
+  - `conf/conf-app.yml`: Configuração do servidor web Apache na VM `app`.
+  - `conf/conf-db.yml`: Configuração do MariaDB e autofs na VM `db`.
+  - `conf/conf-cli.yml`: Configuração do cliente (firefox, xauth, autofs) na VM `cli`.
+  - `conf/conf-arq-storage.yml`: Configuração de LVM e NFS na VM `arq`.
+  - `vars.yml`: Variáveis globais (usuários, IPs, etc).
+- **Templates**: Arquivos Jinja2 para configuração dinâmica (motd, index.html, dhcpd.conf).
+- **Files**: Chaves públicas/privadas dos usuários para acesso SSH.
 
-    Quatro Máquinas Virtuais (arq, db, app, cli) com Debian Bookworm (64-bit) no VirtualBox. 
+## Como usar
 
-Configurações padrão: 512 MB RAM (exceto cli com 1024 MB), clones, SSH desativado. 
+1. **Suba as VMs com Vagrant**  
+   No diretório do projeto:
+   ```sh
+   vagrant up
+   ```
 
-arq (Servidor de Arquivos): Hostname arq.diego.igor.devops, IP estático 192.168.56.134, 3 discos de 10 GB. 
-db (Servidor de Banco de Dados): Hostname db.diego.igor.devops, IP via DHCP (192.168.56.125 fixo). 
-app (Servidor de Aplicação): Hostname app.diego.igor.devops, IP via DHCP (192.168.56.145 fixo). 
-cli (Host Cliente): Hostname cli.diego.igor.devops, IP via DHCP. 
+2. **Acesse as VMs via SSH**  
+   Use o arquivo `ssh_config` para facilitar o acesso:
+   ```sh
+   ssh -F ssh_config arq
+   ssh -F ssh_config db
+   ssh -F ssh_config app
+   ssh -F ssh_config cli
+   ```
 
-Configurações Automatizadas (Ansible): 
+3. **Execute os playbooks Ansible**  
+   No diretório `playbooks/`, execute:
+   ```sh
+   ansible-playbook -i ../hosts.ini all.yml
+   ansible-playbook -i ../hosts.ini conf-dhcp.yml
+   ansible-playbook -i ../hosts.ini conf/conf-arq-storage.yml
+   ansible-playbook -i ../hosts.ini conf/conf-db.yml
+   ansible-playbook -i ../hosts.ini conf/conf-app.yml
+   ansible-playbook -i ../hosts.ini conf/conf-cli.yml
+   ```
 
-    Todas as VMs: Atualização do SO, NTP (chrony), fuso horário America/Recife, criação de grupo ifpb e usuários diego/igor com acesso sudo sem senha. Configuração de SSH (apenas chaves públicas, 
+## Integrantes
 
-root bloqueado, acesso para vagrant/ifpb, banner de saudação, chaves para diego/igor). Instalação de cliente NFS. 
+- **Diego Costa Sales** — Matrícula: 20221380034
+- **Igor de Oliveira Teixeira** — Matrícula: 20221380025
 
-arq (Servidor de Arquivos): 
+## Observações
 
-    DHCP: Servidor autoritativo para diego.igor.devops (192.168.56.0/24), com faixa dinâmica 50-100, gateway 192.168.56.1, e IPs fixos para db e app. 
+- As chaves privadas dos usuários estão no `.gitignore` por segurança.
+- Confirme os nomes dos discos no Vagrantfile antes de executar o playbook de storage.
+- O projeto foi desenvolvido para a disciplina ASA, período 2025.1, professor Leonidas Lima.
 
-    LVM: VG dados com 3 discos, LV ifpb (15GB, ext4), montagem automática em /dados. 
-
-    NFS: Compartilha /dados/nfs (192.168.56.0/24), com usuário nfs-ifpb (sem shell, permissões restritas). 
-
-db (Servidor de Banco de Dados): Instala mariadb-server. Configura 
-
-autofs para montar /dados/nfs em /var/nfs. 
-
-app (Servidor de Aplicação): Instala apache2 com index.html personalizado. Configura 
-
-autofs para montar /dados/nfs em /var/nfs. 
-
-cli (Host Cliente): Instala firefox-esr e xauth. Configura SSH para encaminhamento X11. Configura 
-
-autofs para montar /dados/nfs em /var/nfs. 
-
-Estrutura do Projeto:
-O projeto é organizado com Vagrantfile, hosts.ini, e a pasta playbooks contendo playbooks gerais (all.yml, conf-dhcp.yml), variáveis (vars.yml), arquivos estáticos (files/ para chaves SSH) e templates (templates/). Playbooks específicos por máquina (conf-app.yml, conf-arq-storage.yml, etc.) estão em um subdiretório playbooks/conf/.
-
-Execução:
-
-    vagrant up para provisionar VMs (atualizar MACs em dhcpd.conf.j2 se necessário).
-
-    Executar playbooks Ansible em ordem (gerais, DHCP, arq storage, db, app, cli).
-
-Testes:
-Verificação de SSH, sudo, NTP, LVM/NFS (arq), MariaDB (db), Apache/web (app), Firefox/X11 (cli), e autofs em clientes.
-
-Segurança e GitHub:
-As chaves privadas SSH (id_rsa.diego, id_rsa.igor) são excluídas do repositório Git via .gitignore e NÃO devem ser enviadas para o GitHub.
+---
+```
