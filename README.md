@@ -28,8 +28,6 @@ Este projeto tem como objetivo provisionar e configurar uma infraestrutura virtu
 │   │   ├── conf-cli.yml
 │   │   └── conf-db.yml
 │   ├── files/
-│   │   ├── id_rsa.diego
-│   │   ├── id_rsa.igor
 │   │   ├── id_rsa.pub.diego
 │   │   └── id_rsa.pub.igor
 │   └── templates/
