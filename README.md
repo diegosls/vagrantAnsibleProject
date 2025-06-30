@@ -81,10 +81,6 @@ Este projeto tem como objetivo provisionar e configurar uma infraestrutura virtu
    ansible-playbook -i ../hosts.ini conf/conf-cli.yml
    ```
 
-## Integrantes
-
-- **Diego Costa Sales** — Matrícula: 20221380034
-- **Igor de Oliveira Teixeira** — Matrícula: 20221380025
 
 ## Observações
 
